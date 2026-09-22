@@ -2,6 +2,14 @@ const form = document.getElementById('productForm');
 const productList = document.getElementById('addClient');
 let total = 0;
 
+// Função auxiliar para formatar em Reais (ex: 1150 -> "1.150,00")
+function formatarMoeda(valor) {
+  return valor.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
 form.addEventListener('submit', function(event) {
   event.preventDefault();
 
@@ -22,28 +30,35 @@ form.addEventListener('submit', function(event) {
   const precoTotal = quantidade * precoUni;
 
   const novoProduto = document.createElement('div');
-  novoProduto.innerHTML = `${quantidade}${unidadeMed} ${produto} R$ ${precoUni.toFixed(2)} = R$ ${precoTotal.toFixed(2)} <button class="excluir"><i class="fas fa-trash-alt"></i></button>`; 
+  novoProduto.innerHTML = `${quantidade}${unidadeMed} ${produto} R$ ${formatarMoeda(precoUni)} = R$ ${formatarMoeda(precoTotal)} <button class="excluir"><i class="fas fa-trash-alt"></i></button>`; 
 
   total += precoTotal;
-const totalElement = document.getElementById('total');
-totalElement.textContent = `Total dos itens: R$ ${total.toFixed(2)}`;
+  const totalElement = document.getElementById('total');
+  totalElement.textContent = `Total dos itens: R$ ${formatarMoeda(total)}`;
 
   productList.appendChild(novoProduto);
-    // Limpa os campos do formulário
-    form.reset();
+  form.reset();
 });
 
-// O ouvinte de eventos é adicionado *fora* do evento de submit
 productList.addEventListener('click', function(event) {
-  let button = event.target.closest('.excluir'); // Busca o botão ou ícone pai
+  let button = event.target.closest('.excluir');
   if (button) {
       const item = button.parentNode;
-      const precoItem = parseFloat(item.textContent.split('=')[1].replace('R$', '').replace(',', '.'));
+      
+      // Remove 'R$', remove os pontos de milhar, troca vírgula por ponto e converte para número
+      const precoTexto = item.textContent.split('=')[1];
+      const precoLimpo = precoTexto.replace('R$', '').replaceAll('.', '').replace(',', '.').trim();
+      const precoItem = parseFloat(precoLimpo);
+
       total -= precoItem;
+      
+      // Correção de segurança para evitar valores como -0.00 por imprecisão de ponto flutuante
+      if (Math.abs(total) < 0.0001) total = 0;
+
       const totalElement = document.getElementById('total');
-      totalElement.textContent = `Total dos itens: R$ ${total.toFixed(2)}`;
+      totalElement.textContent = `Total dos itens: R$ ${formatarMoeda(total)}`;
+      
       item.remove();
   }
-
 });
 
