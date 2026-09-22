@@ -61,4 +61,3 @@ productList.addEventListener('click', function(event) {
       item.remove();
   }
 });
-
